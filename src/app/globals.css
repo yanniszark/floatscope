@@ -1,0 +1,27 @@
+:root {
+  --bg: #0a0a0a;
+  --fg: #ededed;
+  --card-bg: #1a1a1a;
+  --border: #333;
+  --accent: #3b82f6;
+  --sign-color: #ef4444;
+  --exp-color: #3b82f6;
+  --mant-color: #22c55e;
+  --error-color: #ef4444;
+  --input-bg: #111;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html,
+body {
+  background: var(--bg);
+  color: var(--fg);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, sans-serif;
+  line-height: 1.6;
+}

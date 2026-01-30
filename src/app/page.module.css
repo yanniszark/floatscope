@@ -1,0 +1,227 @@
+.container {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 2rem 1rem;
+}
+
+.title {
+  text-align: center;
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+/* Format Tabs */
+.tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.tab {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  background: transparent;
+  border: none;
+  color: var(--fg);
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-family: monospace;
+  transition: background 0.15s;
+}
+
+.tab:not(:last-child) {
+  border-right: 1px solid var(--border);
+}
+
+.tab:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.tabActive {
+  background: var(--accent) !important;
+  color: #fff;
+  font-weight: 600;
+}
+
+/* Input Section */
+.inputSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin-bottom: 1.5rem;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.inputLabel {
+  font-size: 0.8rem;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.input {
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  color: var(--fg);
+  font-family: monospace;
+  font-size: 1rem;
+  outline: none;
+  transition: border-color 0.15s;
+}
+
+.input:focus {
+  border-color: var(--accent);
+}
+
+.error {
+  color: var(--error-color);
+  font-size: 0.85rem;
+  margin-top: 0.25rem;
+}
+
+/* Output Panel */
+.outputPanel {
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 1.25rem;
+}
+
+.outputRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.outputRow:last-child {
+  border-bottom: none;
+}
+
+.outputLabel {
+  font-size: 0.8rem;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.outputValue {
+  font-family: monospace;
+  font-size: 0.95rem;
+}
+
+/* Rounding Notice */
+.roundingNotice {
+  margin-top: 0.75rem;
+  padding: 0.5rem 0.75rem;
+  background: rgba(250, 204, 21, 0.1);
+  border: 1px solid rgba(250, 204, 21, 0.3);
+  border-radius: 6px;
+  color: #facc15;
+  font-size: 0.85rem;
+  font-family: monospace;
+}
+
+/* Bit Breakdown */
+.bitBreakdown {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+}
+
+.bitBreakdownLabel {
+  font-size: 0.8rem;
+  color: #999;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 0.5rem;
+}
+
+.bitSegments {
+  display: flex;
+  gap: 4px;
+  font-family: monospace;
+  font-size: 1.3rem;
+  justify-content: center;
+  margin-bottom: 0.5rem;
+}
+
+.bit {
+  width: 2rem;
+  height: 2.2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  font-weight: 600;
+}
+
+.bitSign {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--sign-color);
+}
+
+.bitExponent {
+  background: rgba(59, 130, 246, 0.2);
+  color: var(--exp-color);
+}
+
+.bitMantissa {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--mant-color);
+}
+
+.bitLegend {
+  display: flex;
+  gap: 1.25rem;
+  justify-content: center;
+  font-size: 0.75rem;
+  color: #999;
+}
+
+.legendItem {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.legendDot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+}
+
+.legendSign {
+  background: var(--sign-color);
+}
+
+.legendExp {
+  background: var(--exp-color);
+}
+
+.legendMant {
+  background: var(--mant-color);
+}
+
+/* Interpretation */
+.interpretation {
+  margin-top: 1rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border);
+  font-family: monospace;
+  font-size: 0.9rem;
+  color: #ccc;
+  text-align: center;
+}
