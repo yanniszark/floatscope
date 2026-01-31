@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import {
   FORMATS,
   FloatFormat,
@@ -14,33 +14,105 @@ import {
 } from "@/lib/float";
 import styles from "./page.module.css";
 
-const FORMAT_KEYS = ["f8e5m2", "f8e4m3", "f8e4m3fn", "f4e2m1"] as const;
+const FORMAT_KEYS = ["f8e5m2", "f8e4m3", "f8e4m3fn", "f4e2m1", "f32"] as const;
+
+function getInitialState(): {
+  formatKey: string;
+  decimalInput: string;
+  binaryInput: string;
+} {
+  if (typeof window === "undefined") {
+    return { formatKey: "f8e5m2", decimalInput: "1.0", binaryInput: "00111100" };
+  }
+
+  const params = new URLSearchParams(window.location.search);
+  const fmt = params.get("fmt");
+  const formatKey = fmt && fmt in FORMATS ? fmt : "f8e5m2";
+  const format = FORMATS[formatKey];
+
+  const bParam = params.get("b");
+  const vParam = params.get("v");
+
+  // Binary param takes priority
+  if (bParam !== null) {
+    const bits = parseBinaryInput(bParam, format);
+    if (bits !== null) {
+      const decoded = bitsToDecimal(bits, format);
+      const dec =
+        typeof decoded === "number"
+          ? Object.is(decoded, -0)
+            ? "-0"
+            : String(decoded)
+          : String(decoded);
+      return { formatKey, decimalInput: dec, binaryInput: bParam };
+    }
+  }
+
+  // Decimal param
+  if (vParam !== null) {
+    const parsed = parseDecimalInput(vParam);
+    if (parsed !== null) {
+      const bits = decimalToBits(parsed, format);
+      return {
+        formatKey,
+        decimalInput: vParam,
+        binaryInput: formatBinary(bits, format),
+      };
+    }
+  }
+
+  // Default
+  const defaultBits = decimalToBits(1.0, format);
+  return {
+    formatKey,
+    decimalInput: "1.0",
+    binaryInput: formatBinary(defaultBits, format),
+  };
+}
 
 export default function Home() {
   const [formatKey, setFormatKey] = useState<string>("f8e5m2");
   const [decimalInput, setDecimalInput] = useState("1.0");
   const [binaryInput, setBinaryInput] = useState("00111100");
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+  const initialized = useRef(false);
+
+  // Initialize from URL params on mount
+  useEffect(() => {
+    if (initialized.current) return;
+    initialized.current = true;
+    const state = getInitialState();
+    setFormatKey(state.formatKey);
+    setDecimalInput(state.decimalInput);
+    setBinaryInput(state.binaryInput);
+  }, []);
 
   const format: FloatFormat = FORMATS[formatKey];
 
-  // Compute current bits from decimal input (the "source of truth" on load)
-  let currentBits: number | null = null;
+  // Update URL when state changes (after initialization)
+  const updateUrl = useCallback(
+    (fmt: string, decimal: string, binary: string) => {
+      const params = new URLSearchParams();
+      params.set("fmt", fmt);
 
-  // Try to derive bits from decimal input
-  const decimalParsed = parseDecimalInput(decimalInput);
-  if (decimalParsed !== null) {
-    currentBits = decimalToBits(decimalParsed, format);
-  }
+      // Prefer storing the decimal value; fall back to binary
+      const parsed = parseDecimalInput(decimal);
+      if (parsed !== null) {
+        params.set("v", decimal.trim());
+      } else {
+        const f = FORMATS[fmt];
+        const bp = parseBinaryInput(binary, f);
+        if (bp !== null) {
+          params.set("b", binary);
+        }
+      }
 
-  // If binary input matches format, use it for display
-  const binaryParsed = parseBinaryInput(binaryInput, format);
-  if (binaryParsed !== null && currentBits === null) {
-    currentBits = binaryParsed;
-  }
-
-  // Use currentBits derived from whichever input was last edited
-  // We track this via the handlers below
+      const url = `${window.location.pathname}?${params.toString()}`;
+      window.history.replaceState(null, "", url);
+    },
+    []
+  );
 
   const handleDecimalChange = (val: string) => {
     setDecimalInput(val);
@@ -55,7 +127,9 @@ export default function Home() {
     }
 
     const bits = decimalToBits(parsed, format);
-    setBinaryInput(formatBinary(bits, format));
+    const bin = formatBinary(bits, format);
+    setBinaryInput(bin);
+    updateUrl(formatKey, val, bin);
   };
 
   const handleBinaryChange = (val: string) => {
@@ -71,17 +145,22 @@ export default function Home() {
     }
 
     if (cleaned.length !== format.totalBits) {
-      setError(`Binary input must be exactly ${format.totalBits} bits for ${format.name}`);
+      setError(
+        `Binary input must be exactly ${format.totalBits} bits for ${format.name}`
+      );
       return;
     }
 
     const bits = parseInt(cleaned, 2);
     const decoded = bitsToDecimal(bits, format);
-    if (typeof decoded === "number") {
-      setDecimalInput(Object.is(decoded, -0) ? "-0" : String(decoded));
-    } else {
-      setDecimalInput(decoded);
-    }
+    const dec =
+      typeof decoded === "number"
+        ? Object.is(decoded, -0)
+          ? "-0"
+          : String(decoded)
+        : String(decoded);
+    setDecimalInput(dec);
+    updateUrl(formatKey, dec, val);
   };
 
   const handleFormatChange = (key: string) => {
@@ -90,16 +169,25 @@ export default function Home() {
 
     const newFormat = FORMATS[key];
 
-    // Re-encode the current decimal value in the new format
     const parsed = parseDecimalInput(decimalInput);
     if (parsed !== null) {
       const bits = decimalToBits(parsed, newFormat);
-      setBinaryInput(formatBinary(bits, newFormat));
+      const bin = formatBinary(bits, newFormat);
+      setBinaryInput(bin);
+      updateUrl(key, decimalInput, bin);
     } else {
-      // Reset to zero for new format
       setDecimalInput("0");
-      setBinaryInput("0".repeat(newFormat.totalBits));
+      const bin = "0".repeat(newFormat.totalBits);
+      setBinaryInput(bin);
+      updateUrl(key, "0", bin);
     }
+  };
+
+  const handleCopyLink = () => {
+    navigator.clipboard.writeText(window.location.href).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
   };
 
   // Determine display bits
@@ -114,7 +202,7 @@ export default function Home() {
 
   return (
     <main className={styles.container}>
-      <h1 className={styles.title}>Numeric Format Converter</h1>
+      <h1 className={styles.title}>FloatScope</h1>
 
       {/* Format Tabs */}
       <div className={styles.tabs}>
@@ -160,6 +248,11 @@ export default function Home() {
       {displayBits !== null && (
         <OutputPanel bits={displayBits} format={format} originalInput={dp} />
       )}
+
+      {/* Copy Link */}
+      <button className={styles.copyButton} onClick={handleCopyLink}>
+        {copied ? "Copied!" : "Copy Link"}
+      </button>
     </main>
   );
 }
@@ -196,14 +289,13 @@ function OutputPanel({
   ) {
     if (!Object.is(originalInput, decoded) && originalInput !== decoded) {
       if (!Number.isFinite(decoded)) {
-        // Overflowed to infinity
         roundingMessage = `${originalInput} overflows in ${format.name} → rounded to ${decoded > 0 ? "+Infinity" : "-Infinity"}`;
       } else if (decoded === 0 && originalInput !== 0) {
-        // Underflowed to zero
         const sign = Object.is(decoded, -0) ? "-0" : "0";
         roundingMessage = `${originalInput} underflows in ${format.name} → rounded to ${sign}`;
       } else {
-        const direction = Math.abs(decoded) > Math.abs(originalInput) ? "up" : "down";
+        const direction =
+          Math.abs(decoded) > Math.abs(originalInput) ? "up" : "down";
         roundingMessage = `${originalInput} is not exactly representable in ${format.name} → rounded ${direction} to ${decoded}`;
       }
     }
@@ -224,6 +316,8 @@ function OutputPanel({
   categories.push("sign");
   for (let i = 0; i < format.exponentBits; i++) categories.push("exponent");
   for (let i = 0; i < format.mantissaBits; i++) categories.push("mantissa");
+
+  const compact = format.totalBits > 16;
 
   return (
     <div className={styles.outputPanel}>
@@ -248,7 +342,7 @@ function OutputPanel({
       {/* Bit Breakdown */}
       <div className={styles.bitBreakdown}>
         <div className={styles.bitBreakdownLabel}>Bit Breakdown</div>
-        <div className={styles.bitSegments}>
+        <div className={`${styles.bitSegments} ${compact ? styles.bitSegmentsCompact : ""}`}>
           {bitChars.map((ch, i) => {
             const cat = categories[i];
             const cls =
@@ -258,7 +352,7 @@ function OutputPanel({
                 ? styles.bitExponent
                 : styles.bitMantissa;
             return (
-              <span key={i} className={`${styles.bit} ${cls}`}>
+              <span key={i} className={`${styles.bit} ${compact ? styles.bitCompact : ""} ${cls}`}>
                 {ch}
               </span>
             );

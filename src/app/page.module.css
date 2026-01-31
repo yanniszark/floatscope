@@ -1,5 +1,5 @@
 .container {
-  max-width: 720px;
+  max-width: 780px;
   margin: 0 auto;
   padding: 2rem 1rem;
 }
@@ -151,11 +151,17 @@
 
 .bitSegments {
   display: flex;
-  gap: 4px;
+  gap: 3px;
   font-family: monospace;
   font-size: 1.3rem;
   justify-content: center;
   margin-bottom: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.bitSegmentsCompact {
+  gap: 2px;
+  font-size: 0.85rem;
 }
 
 .bit {
@@ -166,6 +172,12 @@
   justify-content: center;
   border-radius: 4px;
   font-weight: 600;
+}
+
+.bitCompact {
+  width: 1.25rem;
+  height: 1.6rem;
+  border-radius: 3px;
 }
 
 .bitSign {
@@ -224,4 +236,23 @@
   font-size: 0.9rem;
   color: #ccc;
   text-align: center;
+}
+
+/* Copy Link Button */
+.copyButton {
+  display: block;
+  margin: 1.5rem auto 0;
+  padding: 0.5rem 1.25rem;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--fg);
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.copyButton:hover {
+  border-color: var(--accent);
+  background: rgba(59, 130, 246, 0.1);
 }

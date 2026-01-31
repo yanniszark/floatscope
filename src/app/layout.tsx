@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Numeric Format Converter",
+  title: "FloatScope",
   description: "Convert between decimal and mini-float binary representations",
 };
 

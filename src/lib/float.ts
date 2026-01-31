@@ -49,6 +49,14 @@ export const FORMATS: Record<string, FloatFormat> = {
     bias: 1,
     specialValues: "none",
   },
+  f32: {
+    name: "f32",
+    totalBits: 32,
+    exponentBits: 8,
+    mantissaBits: 23,
+    bias: 127,
+    specialValues: "ieee",
+  },
 };
 
 export interface BitComponents {
@@ -81,12 +89,34 @@ export function bitsToComponents(
   };
 }
 
+// Native f32 helpers using DataView for bit-perfect conversion
+const f32Buf = new ArrayBuffer(4);
+const f32View = new DataView(f32Buf);
+
+function f32BitsToNumber(bits: number): number {
+  f32View.setUint32(0, bits >>> 0, false);
+  return f32View.getFloat32(0, false);
+}
+
+function f32NumberToBits(value: number): number {
+  f32View.setFloat32(0, value, false);
+  return f32View.getUint32(0, false);
+}
+
 export type DecodedValue = number | "NaN" | "Infinity" | "-Infinity";
 
 export function bitsToDecimal(
   bits: number,
   format: FloatFormat
 ): DecodedValue {
+  // Use native conversion for f32
+  if (format.name === "f32") {
+    const val = f32BitsToNumber(bits);
+    if (Number.isNaN(val)) return "NaN";
+    if (val === Infinity) return "Infinity";
+    if (val === -Infinity) return "-Infinity";
+    return val;
+  }
   const { sign, exponent, mantissa } = bitsToComponents(bits, format);
   const maxExponent = (1 << format.exponentBits) - 1;
 
@@ -128,6 +158,11 @@ export function bitsToDecimal(
 }
 
 export function decimalToBits(value: number, format: FloatFormat): number {
+  // Use native conversion for f32
+  if (format.name === "f32") {
+    return f32NumberToBits(value);
+  }
+
   const maxExponent = (1 << format.exponentBits) - 1;
   const maxMantissa = (1 << format.mantissaBits) - 1;
 

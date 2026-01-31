@@ -1,4 +1,4 @@
-# Numeric Format Converter
+# FloatScope
 
 ## Tech Stack
 
@@ -64,6 +64,7 @@ src/
 | f8e4m3     | 8    | 1    | 4   | 3    | 7    | All-NaN: all max-exp patterns are NaN       |
 | f8e4m3fn   | 8    | 1    | 4   | 3    | 7    | FN: only S_1111_111 is NaN, rest are finite |
 | f4e2m1     | 4    | 1    | 2   | 1    | 1    | None: all bit patterns are finite           |
+| f32        | 32   | 1    | 8   | 23   | 127  | IEEE: Inf (mant=0) + NaN (mant≠0)          |
 
 ## Special Value Modes (`specialValues` in `FloatFormat`)
 
