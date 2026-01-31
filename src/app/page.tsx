@@ -126,6 +126,12 @@ export default function Home() {
       return;
     }
 
+    const unsupported = checkUnsupportedValue(parsed, format);
+    if (unsupported) {
+      setError(unsupported);
+      return;
+    }
+
     const bits = decimalToBits(parsed, format);
     const bin = formatBinary(bits, format);
     setBinaryInput(bin);
@@ -171,6 +177,12 @@ export default function Home() {
 
     const parsed = parseDecimalInput(decimalInput);
     if (parsed !== null) {
+      const unsupported = checkUnsupportedValue(parsed, newFormat);
+      if (unsupported) {
+        setError(unsupported);
+        setBinaryInput("0".repeat(newFormat.totalBits));
+        return;
+      }
       const bits = decimalToBits(parsed, newFormat);
       const bin = formatBinary(bits, newFormat);
       setBinaryInput(bin);
@@ -378,6 +390,21 @@ function OutputPanel({
       <div className={styles.interpretation}>{interpretation}</div>
     </div>
   );
+}
+
+function checkUnsupportedValue(
+  value: number,
+  format: FloatFormat
+): string | null {
+  if (Number.isNaN(value) && format.specialValues === "none") {
+    return `${format.name} has no NaN representation`;
+  }
+  if (!Number.isFinite(value) && !Number.isNaN(value)) {
+    if (format.specialValues !== "ieee") {
+      return `${format.name} has no Infinity representation`;
+    }
+  }
+  return null;
 }
 
 function parseDecimalInput(input: string): number | null {
