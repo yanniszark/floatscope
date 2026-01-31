@@ -1,10 +1,11 @@
 /**
  * How special values (max exponent) are interpreted:
- * - "ieee": mantissa=0 → ±Inf, mantissa≠0 → NaN (e.g. f8e5m2, f4e2m1)
+ * - "ieee": mantissa=0 → ±Inf, mantissa≠0 → NaN (e.g. f8e5m2)
  * - "all-nan": all max-exponent patterns are NaN, no Inf (e.g. f8e4m3 OCP MX)
  * - "fn": only max-exponent + max-mantissa is NaN, rest are finite (e.g. f8e4m3fn NVIDIA)
+ * - "none": no special values, all bit patterns are finite (e.g. f4e2m1 OCP MX)
  */
-export type SpecialValueMode = "ieee" | "all-nan" | "fn";
+export type SpecialValueMode = "ieee" | "all-nan" | "fn" | "none";
 
 export interface FloatFormat {
   name: string;
@@ -46,7 +47,7 @@ export const FORMATS: Record<string, FloatFormat> = {
     exponentBits: 2,
     mantissaBits: 1,
     bias: 1,
-    specialValues: "ieee",
+    specialValues: "none",
   },
 };
 
@@ -98,14 +99,15 @@ export function bitsToDecimal(
       return "NaN";
     } else if (format.specialValues === "all-nan") {
       return "NaN";
-    } else {
-      // "fn": only max mantissa is NaN, rest are normal finite values
+    } else if (format.specialValues === "fn") {
+      // Only max mantissa is NaN, rest are normal finite values
       const maxMantissa = (1 << format.mantissaBits) - 1;
       if (mantissa === maxMantissa) {
         return "NaN";
       }
       // Fall through to normal value calculation below
     }
+    // "none": all patterns are finite, fall through
   }
 
   const signMul = sign === 0 ? 1 : -1;
@@ -134,6 +136,10 @@ export function decimalToBits(value: number, format: FloatFormat): number {
     if (format.specialValues === "ieee") {
       // exponent=all 1s, mantissa=1
       return (maxExponent << format.mantissaBits) | 1;
+    } else if (format.specialValues === "none") {
+      // No NaN representation; return max finite value
+      const { maxFiniteExponent, maxFiniteMantissa } = getMaxFinite(format);
+      return (maxFiniteExponent << format.mantissaBits) | maxFiniteMantissa;
     } else {
       // "all-nan" and "fn": exponent=all 1s, mantissa=all 1s
       return (maxExponent << format.mantissaBits) | maxMantissa;
@@ -247,6 +253,7 @@ export function decimalToBits(value: number, format: FloatFormat): number {
  * - ieee: maxExp-1 with all mantissa bits set
  * - all-nan: maxExp-1 with all mantissa bits set
  * - fn: maxExp with mantissa = maxMantissa-1 (maxMantissa is NaN)
+ * - none: maxExp with all mantissa bits set (everything is finite)
  */
 function getMaxFinite(format: FloatFormat): {
   maxFiniteExponent: number;
@@ -255,6 +262,9 @@ function getMaxFinite(format: FloatFormat): {
   const maxExponent = (1 << format.exponentBits) - 1;
   const maxMantissa = (1 << format.mantissaBits) - 1;
 
+  if (format.specialValues === "none") {
+    return { maxFiniteExponent: maxExponent, maxFiniteMantissa: maxMantissa };
+  }
   if (format.specialValues === "fn") {
     return { maxFiniteExponent: maxExponent, maxFiniteMantissa: maxMantissa - 1 };
   }
@@ -285,12 +295,12 @@ export function getInterpretation(
       return "NaN";
     } else if (format.specialValues === "all-nan") {
       return "NaN";
-    } else {
-      // "fn": only max mantissa is NaN
+    } else if (format.specialValues === "fn") {
       const maxMant = (1 << format.mantissaBits) - 1;
       if (mantissa === maxMant) return "NaN";
       // Otherwise it's a normal value — fall through below
     }
+    // "none": all patterns are finite, fall through
   }
 
   const signStr = `(-1)^${sign}`;
