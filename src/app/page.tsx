@@ -271,6 +271,10 @@ export default function Home() {
       <button className={styles.copyButton} onClick={handleCopyLink}>
         {copied ? "Copied!" : "Copy Link"}
       </button>
+
+      <footer className={styles.footer}>
+        Vibecoded by Ioannis Zarkadas &copy; 2026
+      </footer>
     </main>
   );
 }
