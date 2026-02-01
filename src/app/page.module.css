@@ -4,11 +4,34 @@
   padding: 2rem 1rem;
 }
 
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  margin-bottom: 2rem;
+}
+
 .title {
   text-align: center;
-  margin-bottom: 2rem;
   font-size: 1.5rem;
   font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.githubLink {
+  position: absolute;
+  right: 0;
+  color: #999;
+  transition: color 0.15s;
+  display: flex;
+  align-items: center;
+}
+
+.githubLink:hover {
+  color: var(--fg);
 }
 
 /* Format Tabs */

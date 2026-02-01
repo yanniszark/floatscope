@@ -12,6 +12,7 @@ import {
   getInterpretation,
   parseBinaryInput,
 } from "@/lib/float";
+import { Microscope, Github } from "lucide-react";
 import styles from "./page.module.css";
 
 const FORMAT_KEYS = ["f8e5m2", "f8e4m3", "f8e4m3fn", "f4e2m1", "f32"] as const;
@@ -214,7 +215,12 @@ export default function Home() {
 
   return (
     <main className={styles.container}>
-      <h1 className={styles.title}>FloatScope</h1>
+      <div className={styles.header}>
+        <h1 className={styles.title}><Microscope size={32} /> FloatScope</h1>
+        <a href="https://github.com/yanniszark/floatscope" target="_blank" rel="noopener noreferrer" className={styles.githubLink} aria-label="View source on GitHub">
+          <Github size={22} />
+        </a>
+      </div>
 
       {/* Format Tabs */}
       <div className={styles.tabs}>
