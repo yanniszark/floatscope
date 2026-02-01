@@ -221,6 +221,7 @@ export default function Home() {
           <Github size={22} />
         </a>
       </div>
+      <p className={styles.subtitle}>Explore and visualize how numbers are represented in floating-point formats</p>
 
       {/* Format Tabs */}
       <div className={styles.tabs}>
