@@ -49,18 +49,21 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
+  flex-wrap: wrap;
 }
 
 .tab {
-  flex: 1;
-  padding: 0.6rem 1rem;
+  flex: 1 1 auto;
+  min-width: 0;
+  padding: 0.6rem 0.75rem;
   background: transparent;
   border: none;
   color: var(--fg);
   cursor: pointer;
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-family: monospace;
   transition: background 0.15s;
+  white-space: nowrap;
 }
 
 .tab:not(:last-child) {

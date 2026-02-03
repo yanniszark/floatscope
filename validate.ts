@@ -8,6 +8,8 @@ const FORMAT_MAP: Record<string, string> = {
   f8e5m2: "f8e5m2",
   f8e4m3fn: "f8e4m3fn",
   f4e2m1: "f4e2m1",
+  bf16: "bf16",
+  f32: "f32",
 };
 
 let totalTests = 0;
@@ -63,11 +65,20 @@ let rtFailed = 0;
 
 for (const [refName, ourName] of Object.entries(FORMAT_MAP)) {
   const format = FORMATS[ourName];
-  const totalPatterns = 1 << format.totalBits;
+  // For formats with > 16 bits, only test the sampled bit patterns from the reference table
+  const totalPatterns = format.totalBits > 16 ? 0 : (1 << format.totalBits);
+  const bitPatternsToTest: number[] = [];
+  if (totalPatterns > 0) {
+    for (let i = 0; i < totalPatterns; i++) bitPatternsToTest.push(i);
+  } else {
+    // Use the sampled bit patterns from the reference table
+    const entries = reference[refName] as Array<{ bits: number }>;
+    for (const entry of entries) bitPatternsToTest.push(entry.bits);
+  }
   let passed = 0;
   let failed = 0;
 
-  for (let bits = 0; bits < totalPatterns; bits++) {
+  for (const bits of bitPatternsToTest) {
     const decoded = bitsToDecimal(bits, format);
     let reEncoded: number;
 
@@ -108,7 +119,7 @@ for (const [refName, ourName] of Object.entries(FORMAT_MAP)) {
 
   rtPassed += passed;
   rtFailed += failed;
-  console.log(`${ourName}: ${passed}/${totalPatterns} round-trips passed${failed > 0 ? ` (${failed} FAILED)` : ""}`);
+  console.log(`${ourName}: ${passed}/${bitPatternsToTest.length} round-trips passed${failed > 0 ? ` (${failed} FAILED)` : ""}`);
 }
 
 console.log(`\nRound-trip total: ${rtPassed}/${rtTotal} passed, ${rtFailed} failed`);

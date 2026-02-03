@@ -49,6 +49,14 @@ export const FORMATS: Record<string, FloatFormat> = {
     bias: 1,
     specialValues: "none",
   },
+  bf16: {
+    name: "bf16",
+    totalBits: 16,
+    exponentBits: 8,
+    mantissaBits: 7,
+    bias: 127,
+    specialValues: "ieee",
+  },
   f32: {
     name: "f32",
     totalBits: 32,
