@@ -78,6 +78,16 @@ export default function Home() {
   const [error, setError] = useState("");
   const [copied, setCopied] = useState(false);
   const initialized = useRef(false);
+  const binaryRef = useRef<HTMLInputElement>(null);
+  const pendingCursorRef = useRef<number | null>(null);
+
+  // Restore cursor position after React re-renders the binary input
+  useEffect(() => {
+    if (pendingCursorRef.current !== null && binaryRef.current) {
+      binaryRef.current.setSelectionRange(pendingCursorRef.current, pendingCursorRef.current);
+      pendingCursorRef.current = null;
+    }
+  });
 
   // Initialize from URL params on mount
   useEffect(() => {
@@ -139,9 +149,19 @@ export default function Home() {
     updateUrl(formatKey, val, bin);
   };
 
-  const handleBinaryChange = (val: string) => {
+  // Map a position in the cleaned (no spaces) string to the formatted string
+  const cleanedPosToFormatted = (cleanedPos: number, formattedLen: number): number => {
+    return Math.min(cleanedPos + Math.floor(cleanedPos / 4), formattedLen);
+  };
+
+  const handleBinaryChange = (val: string, cleanedCursorPos?: number) => {
     setBinaryInput(val);
     setError("");
+
+    // Set cursor position early so it applies even on early returns
+    if (cleanedCursorPos !== undefined) {
+      pendingCursorRef.current = cleanedPosToFormatted(cleanedCursorPos, val.length);
+    }
 
     const cleaned = val.replace(/[\s_]/g, "");
     if (cleaned.length === 0) return;
@@ -159,6 +179,14 @@ export default function Home() {
     }
 
     const bits = parseInt(cleaned, 2);
+    const bin = formatBinary(bits, format);
+    setBinaryInput(bin);
+
+    // Recompute cursor for the reformatted string
+    if (cleanedCursorPos !== undefined) {
+      pendingCursorRef.current = cleanedPosToFormatted(cleanedCursorPos, bin.length);
+    }
+
     const decoded = bitsToDecimal(bits, format);
     const dec =
       typeof decoded === "number"
@@ -167,7 +195,31 @@ export default function Home() {
           : String(decoded)
         : String(decoded);
     setDecimalInput(dec);
-    updateUrl(formatKey, dec, val);
+    updateUrl(formatKey, dec, bin);
+  };
+
+  const handleBinaryInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    const pos = e.target.selectionStart ?? val.length;
+    // Count how many real digits are before the cursor
+    const cleanedCursorPos = val.slice(0, pos).replace(/[\s_]/g, "").length;
+    handleBinaryChange(val, cleanedCursorPos);
+  };
+
+  const handleBinaryKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key !== "Backspace") return;
+    const input = e.currentTarget;
+    const pos = input.selectionStart ?? 0;
+    const selEnd = input.selectionEnd ?? pos;
+    // Only intercept when no selection and char before cursor is a space
+    if (pos !== selEnd || pos === 0 || input.value[pos - 1] !== " ") return;
+
+    e.preventDefault();
+    if (pos < 2) return;
+    // Remove the digit before the space (and the space will be handled by reformat)
+    const newVal = input.value.slice(0, pos - 2) + input.value.slice(pos);
+    const cleanedCursorPos = input.value.slice(0, pos - 2).replace(/[\s_]/g, "").length;
+    handleBinaryChange(newVal, cleanedCursorPos);
   };
 
   const handleFormatChange = (key: string) => {
@@ -266,10 +318,12 @@ export default function Home() {
             Binary String ({format.totalBits} bits)
           </label>
           <input
+            ref={binaryRef}
             className={styles.input}
             type="text"
             value={binaryInput}
-            onChange={(e) => handleBinaryChange(e.target.value)}
+            onChange={handleBinaryInputChange}
+            onKeyDown={handleBinaryKeyDown}
             placeholder={`e.g. ${"0".repeat(format.totalBits)}`}
           />
         </div>
@@ -346,8 +400,8 @@ function OutputPanel({
     }
   }
 
-  // Build bit array with categories
-  const bitChars = binary.split("");
+  // Build bit array with categories (strip spaces from formatted binary)
+  const bitChars = binary.replace(/ /g, "").split("");
   const categories: ("sign" | "exponent" | "mantissa")[] = [];
   categories.push("sign");
   for (let i = 0; i < format.exponentBits; i++) categories.push("exponent");

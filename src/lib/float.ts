@@ -316,7 +316,8 @@ function getMaxFinite(format: FloatFormat): {
 }
 
 export function formatBinary(bits: number, format: FloatFormat): string {
-  return bits.toString(2).padStart(format.totalBits, "0");
+  const raw = bits.toString(2).padStart(format.totalBits, "0");
+  return raw.replace(/(.{4})(?=.)/g, "$1 ");
 }
 
 export function formatHex(bits: number, format: FloatFormat): string {
