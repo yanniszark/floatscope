@@ -41,6 +41,28 @@
   color: var(--fg);
 }
 
+/* Format Select (small screens) */
+.formatSelect {
+  display: none;
+  width: 100%;
+  margin-bottom: 1.5rem;
+  padding: 0.6rem 0.8rem;
+  background: var(--input-bg);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--fg);
+  font-family: monospace;
+  font-size: 1rem;
+  cursor: pointer;
+  outline: none;
+  transition: border-color 0.15s;
+  appearance: auto;
+}
+
+.formatSelect:focus {
+  border-color: var(--accent);
+}
+
 /* Format Tabs */
 .tabs {
   display: flex;
@@ -49,12 +71,19 @@
   border: 1px solid var(--border);
   border-radius: 8px;
   overflow: hidden;
-  flex-wrap: wrap;
+}
+
+@media (max-width: 520px) {
+  .formatSelect {
+    display: block;
+  }
+  .tabs {
+    display: none;
+  }
 }
 
 .tab {
-  flex: 1 1 auto;
-  min-width: 0;
+  flex: 1;
   padding: 0.6rem 0.75rem;
   background: transparent;
   border: none;

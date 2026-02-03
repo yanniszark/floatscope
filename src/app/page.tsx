@@ -15,7 +15,7 @@ import {
 import { Microscope, Github } from "lucide-react";
 import styles from "./page.module.css";
 
-const FORMAT_KEYS = ["f8e5m2", "f8e4m3", "f8e4m3fn", "f4e2m1", "bf16", "f32"] as const;
+const FORMAT_KEYS = ["f32", "bf16", "f8e5m2", "f8e4m3", "f8e4m3fn", "f4e2m1"] as const;
 
 function getInitialState(): {
   formatKey: string;
@@ -223,7 +223,7 @@ export default function Home() {
       </div>
       <p className={styles.subtitle}>Explore and visualize how numbers are represented in floating-point formats</p>
 
-      {/* Format Tabs */}
+      {/* Format Tabs (wide screens) */}
       <div className={styles.tabs}>
         {FORMAT_KEYS.map((key) => (
           <button
@@ -235,6 +235,19 @@ export default function Home() {
           </button>
         ))}
       </div>
+
+      {/* Format Select (small screens) */}
+      <select
+        className={styles.formatSelect}
+        value={formatKey}
+        onChange={(e) => handleFormatChange(e.target.value)}
+      >
+        {FORMAT_KEYS.map((key) => (
+          <option key={key} value={key}>
+            {key}
+          </option>
+        ))}
+      </select>
 
       {/* Input Section */}
       <div className={styles.inputSection}>
